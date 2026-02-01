@@ -23,3 +23,24 @@ Identificação e Filtros: Implementei uma classe ZipProcessor que inspeciona o 
 Normalização: O código realiza a leitura forçada em UTF-8 para garantir a integridade de acentos e caracteres especiais (evitando problemas de encoding comuns em dados governamentais). Além disso, normaliza colunas numéricas convertendo o formato brasileiro (1.000,00) para ponto flutuante padrão (1000.0).
 
 Filtragem de Negócio: Após análise dos dados reais, apliquei um filtro preciso na coluna DESCRICAO buscando a string "Despesas com Eventos/Sinistros", garantindo que apenas os dados solicitados pelo teste sejam persistidos.
+
+1.3. Consolidação e Análise de Inconsistências
+Durante a etapa de consolidação dos trimestres, adotei as seguintes estratégias para garantir a integridade e relevância analítica dos dados:
+
+Tratamento de Valores Zerados e Negativos:
+
+Decisão: Remoção física de todos os registros com valor igual a 0.0.
+
+Justificativa: Em contabilidade, registros zerados indicam ausência de movimentação (inatividade). Mantê-los aumentaria drasticamente o volume do dataset final, gerando "ruído" sem agregar valor analítico.
+
+Observação: Valores negativos foram preservados intencionalmente, pois representam estornos ou ajustes contábeis legítimos que alteram o saldo final.
+
+Normalização Temporal (Datas Inconsistentes):
+
+Decisão: Utilização do parser nativo do Pandas (to_datetime com errors='coerce') em vez de Expressões Regulares (Regex).
+
+Justificativa: Essa abordagem segue o padrão de mercado e atua como uma estratégia fail-safe. Enquanto Regex tornaria o código rígido e propenso a falhas com novos formatos de data, o método do Pandas gerencia automaticamente variações de separadores (/ ou -) e converte dados inválidos para NaT (Not a Time) sem interromper a execução do pipeline.
+
+Limitação Identificada - Dados Cadastrais (CNPJ):
+
+Constatou-se que os arquivos contábeis originais (fonte primária) contêm apenas o identificador da operadora (REG_ANS), sem as colunas CNPJ ou Razão Social. Nesta etapa de consolidação, optei por focar na limpeza dos dados financeiros. As colunas de identificação foram criadas no esquema final, mas mantidas vazias, visto que o preenchimento exigiria o cruzamento com uma base externa, o que foge ao escopo da limpeza pura dos arquivos CSV fornecidos.
