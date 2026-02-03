@@ -4,6 +4,7 @@ from src.services.ans_client import AnsDataClient
 from src.services.zip_processor import ZipProcessor
 from src.services.data_consolidator import DataConsolidator
 from src.services.data_validator import DataValidator
+from src.services.data_enricher import DataEnricher
 
 def main():
     print("--- STARTING ETL PIPELINE ---")
@@ -47,17 +48,35 @@ def main():
 
     else:
         print("No data processed.")
+        return
 
-    print("\n--- Data Transformation & Validation ---")
-    validator = DataValidator(output_dir='output')
+    print("\n--- Data Enrichment (Cadastral Join) ---")
     
-    # Point to the file generated in the previous step
-    input_zip = "output/consolidado_despesas.zip"
+    # Download Cadastre
+    print("Downloading Cadastral Data...")
+    cadastral_path = client.download_cadastral_data()
     
-    if os.path.exists(input_zip):
-        validator.validate_and_split(input_zip)
+    # Run Enricher
+    enricher = DataEnricher()
+    
+    # Input: The output from consolidator
+    input_for_enricher = "output/consolidado_despesas.zip" 
+    
+    if os.path.exists(input_for_enricher):
+        # This generates 'output/enriched_data.zip'
+        enriched_path = enricher.enrich_data(input_for_enricher, cadastral_path)
     else:
-        print(f"Critical Error: Input file {input_zip} not found.")
+        print("Error: Consolidated file not found.")
+        return
+
+    # --- VALIDATION ---
+    print("\n--- Data Validation ---")
+    validator = DataValidator(output_dir='output')
+   
+    if enriched_path and os.path.exists(enriched_path):
+        validator.validate_and_split(enriched_path)
+    else:
+        print("Error: Enriched file not found.")
 
 if __name__ == "__main__":
     main()

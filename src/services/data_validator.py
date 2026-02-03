@@ -15,16 +15,18 @@ class DataValidator:
         
         # Pandas can read directly from ZIP if it contains one CSV
         try:
-            df = pd.read_csv(input_zip_path, compression='zip', sep=';', encoding='utf-8')
+            df = pd.read_csv(input_zip_path, compression='zip', sep=';', encoding='utf-8', dtype=str)
         except Exception as e:
             print(f"   [Error] Could not read ZIP file: {e}")
             return None
 
         print(f"    Validating {len(df)} rows...")
 
-        # Normalize Types for Validation
-        if df['ValorDespesas'].dtype == 'object':
-             df['ValorDespesas'] = df['ValorDespesas'].astype(str).str.replace(',', '.').astype(float)
+        # Replace comma with dot (standardize)
+        df['ValorDespesas'] = df['ValorDespesas'].str.replace(',', '.', regex=False)
+        
+        # Convert to Number (Coerce errors to NaN, then fill with 0)
+        df['ValorDespesas'] = pd.to_numeric(df['ValorDespesas'], errors='coerce').fillna(0)
 
         # --- RULES ---
         

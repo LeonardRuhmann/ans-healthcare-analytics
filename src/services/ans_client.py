@@ -136,3 +136,14 @@ class AnsDataClient:
         # Download them
         for item in targets:
             self._download_file(item['url'], item['filename'])
+
+    def download_cadastral_data(self):
+        """
+        Downloads the Active Operators Cadastre (Relatorio_Cadop).
+        Target URL: https://dadosabertos.ans.gov.br/FTP/PDA/operadoras_de_plano_de_saude_ativas/Relatorio_cadop.csv
+        """
+        base_url = "https://dadosabertos.ans.gov.br/FTP/PDA/operadoras_de_plano_de_saude_ativas/Relatorio_cadop.csv"
+        filename = "Relatorio_Cadop.csv"
+        
+        self._download_file(base_url, filename)
+        return os.path.join(self.download_dir, filename)
