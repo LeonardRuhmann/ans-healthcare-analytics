@@ -1,71 +1,119 @@
-# IntuitiveCare-Teste
+# IntuitiveCare-Teste - Documentação Técnica
 
-## 1. TESTE DE INTEGRAÇÃO COM API PÚBLICA
+## 1. Pipeline de Extração e Transformação (ETL)
 
-1.1. Acesso à API de Dados Abertos da ANS
-Arquitetura e Organização: Criei uma pasta services e a classe AnsDataClient para garantir a Separação de Responsabilidades. Isso evita misturar a lógica de conexão com o fluxo principal, tornando o código mais fácil de manter e escalar.
+### 1.1. Acesso à API e Arquitetura
 
-Escolha de Ferramentas (KISS): Escolhi a biblioteca BeautifulSoup4 (BS4) ao invés de alternativas como Selenium ou Regex puro.
+#### **Decisão 1: Separação de Responsabilidades (`Services`)**
+Criei uma pasta `services` e a classe `AnsDataClient` para isolar a lógica de conexão.
+* **Justificativa:** Evita misturar a lógica de conexão com o fluxo principal.
+* **✅ Prós:** Código desacoplado, fácil manutenção e escalabilidade.
+* **⚠️ Contras:** Aumenta ligeiramente a complexidade da estrutura de pastas para um projeto pequeno.
 
-Por que não Selenium? O Selenium é muito pesado para uma página estática e violaria o princípio KISS (Keep It Simple).
+#### **Decisão 2: Ferramenta de Scraping (`BeautifulSoup4` vs `Selenium`)**
+Optei pela biblioteca `BeautifulSoup4` (BS4) em conjunto com `Requests` ao invés de Selenium ou Regex puro.
+* **Justificativa (KISS):** O site da ANS é estático. Usar Selenium seria *overkill* (pesado e lento). Regex puro seria frágil para tags HTML.
+* **✅ Prós:** Leve, rápido e robusto contra pequenas mudanças de layout HTML.
+* **⚠️ Contras:** Não funcionaria se o site dependesse de JavaScript para renderizar os links (o que não é o caso).
 
-Por que não Regex puro? Regex é frágil para fazer parsing de tags HTML e poderia quebrar facilmente com mudanças no site. O BS4 é a solução mais equilibrada.
+#### **Decisão 3: Detecção de Trimestres via Regex (`re`)**
+Desenvolvi uma Expressão Regular para identificar os arquivos (método `_detect_quarter`).
+* **Justificativa:** Os nomes variam muito (ex: `1T2025` vs `dados_2023_1_trim`).
+* **✅ Prós:** Evita *hardcoding* de nomes, tornando a solução flexível para diferentes anos.
+* **⚠️ Contras:** Exige uma regex complexa e bem testada para cobrir todos os casos de borda.
 
-Pensamento Crítico (Regex): Como os nomes dos arquivos variam bastante entre os anos (ex: 1T2025 vs dados_2023_1_trim), precisei desenvolver uma Expressão Regular (Regex) robusta que atendesse a todos os casos sem "hardcode". Essa foi a parte mais desafiadora desta etapa (ver método _detect_quarter em src/services/ans_cliente.py).
+#### **Decisão 4: Download em Stream (`shutil.copyfileobj`)**
+Utilizei `stream=True` nas requisições HTTP.
+* **Justificativa:** Processa o download em partes (*chunks*).
+* **✅ Prós:** Previne estouro de memória (RAM) ao baixar arquivos ZIP grandes em servidores modestos.
+* **⚠️ Contras:** Nenhum significativo para este contexto.
 
-Performance: No download, priorizei a eficiência de recursos utilizando stream=True e shutil.copyfileobj. Essa abordagem processa o download em partes (chunks), evitando carregar arquivos ZIP grandes inteiros na memória RAM. Isso previne que a aplicação crashe em servidores com memória limitada.
+---
 
-1.2. Processamento e Transformação de Dados
-Estratégia de Processamento: Optei pela abordagem Incremental. O script main.py itera sobre os arquivos baixados, processando um arquivo ZIP por vez e descartando os dados brutos da memória após a extração das linhas de interesse.
+### 1.2. Processamento e Transformação
 
-Justificativa: Embora carregar tudo em memória fosse mais rápido para volumes pequenos, a abordagem incremental é mais escalável. Se a ANS liberar arquivos de 10GB no futuro, essa solução continuará funcionando sem estourar a memória, enquanto a abordagem de processar todos de uma vez falharia.
+#### **Decisão 5: Processamento Incremental (Iterativo)**
+O script itera sobre os arquivos ZIP baixados um por um, descartando os dados brutos da memória após a extração.
+* **Justificativa:** Escalabilidade.
+* **✅ Prós:** Se a ANS liberar arquivos de 10GB no futuro, essa solução continuará funcionando sem estourar a memória.
+* **⚠️ Contras:** Pode ser ligeiramente mais lento que carregar tudo na memória para volumes muito pequenos (overhead de I/O), mas a segurança compensa.
 
-Identificação e Filtros: Implementei uma classe ZipProcessor que inspeciona o conteúdo do ZIP sem extraí-lo para o disco (usando zipfile em memória).
+#### **Decisão 6: Filtragem em Memória (`ZipFile`)**
+Uso da classe `ZipProcessor` para inspecionar o conteúdo do ZIP sem extraí-lo para o disco.
+* **Justificativa:** Evitar I/O desnecessário de disco.
+* **✅ Prós:** Mais rápido e limpo (não deixa "lixo" temporário no disco).
+* **⚠️ Contras:** Exige manipulação de bytes em memória.
 
-Normalização: O código realiza a leitura forçada em UTF-8 para garantir a integridade de acentos e caracteres especiais (evitando problemas de encoding comuns em dados governamentais). Além disso, normaliza colunas numéricas convertendo o formato brasileiro (1.000,00) para ponto flutuante padrão (1000.0).
+#### **Decisão 7: Normalização de Encoding e Numéricos**
+Leitura forçada em `UTF-8` e conversão de `1.000,00` para `1000.0`.
+* **Justificativa:** Garantir integridade de acentos e cálculos matemáticos corretos.
+* **✅ Prós:** Previne erros silenciosos em análises futuras.
 
-Filtragem de Negócio: Após análise dos dados reais, apliquei um filtro preciso na coluna DESCRICAO buscando a string "Despesas com Eventos/Sinistros", garantindo que apenas os dados solicitados pelo teste sejam persistidos.
+---
 
-1.3. Consolidação e Análise de Inconsistências
-Durante a etapa de consolidação dos trimestres, adotei as seguintes estratégias para garantir a integridade e relevância analítica dos dados:
+### 1.3. Consolidação e Limpeza
 
-Tratamento de Valores Zerados e Negativos:
+#### **Decisão 8: Tratamento de Valores Zerados vs. Negativos**
+Remoção física de registros com valor `0.0`.
+* **Justificativa:** Registros zerados indicam inatividade e geram "ruído".
+* **✅ Prós:** Redução drástica do volume de dados sem perda de informação.
+* **⚠️ Contras:** Perde-se o histórico de que a conta existiu naquele trimestre (embora inativa).
 
-Decisão: Remoção física de todos os registros com valor igual a 0.0.
+> **Nota sobre Negativos:** Valores negativos foram **mantidos**, pois representam estornos ou ajustes contábeis legítimos.
 
-Justificativa: Em contabilidade, registros zerados indicam ausência de movimentação (inatividade). Mantê-los aumentaria drasticamente o volume do dataset final, gerando "ruído" sem agregar valor analítico.
+#### **Decisão 9: Parser de Datas (`Pandas` vs `Regex`)**
+Uso de `pd.to_datetime(errors='coerce')` em vez de Regex manual.
+* **Justificativa:** *Fail-safe*. O método nativo gerencia variações (`/` ou `-`) automaticamente.
+* **✅ Prós:** Robustez. Dados inválidos viram `NaT` sem quebrar o pipeline.
+* **⚠️ Contras:** Menos controle granular sobre formatos exóticos (mas suficiente para o padrão ANS).
 
-Observação: Valores negativos foram preservados intencionalmente, pois representam estornos ou ajustes contábeis legítimos que alteram o saldo final.
+---
 
-Normalização Temporal (Datas Inconsistentes):
+## 2. Enriquecimento e Qualidade de Dados
 
-Decisão: Utilização do parser nativo do Pandas (to_datetime com errors='coerce') em vez de Expressões Regulares (Regex).
+### 2.1. Validação (Quarantine Pattern)
 
-Justificativa: Essa abordagem segue o padrão de mercado e atua como uma estratégia fail-safe. Enquanto Regex tornaria o código rígido e propenso a falhas com novos formatos de data, o método do Pandas gerencia automaticamente variações de separadores (/ ou -) e converte dados inválidos para NaT (Not a Time) sem interromper a execução do pipeline.
-
-Limitação Identificada - Dados Cadastrais (CNPJ):
-
-Constatou-se que os arquivos contábeis originais (fonte primária) contêm apenas o identificador da operadora (REG_ANS), sem as colunas CNPJ ou Razão Social. Nesta etapa de consolidação, optei por focar na limpeza dos dados financeiros. As colunas de identificação foram criadas no esquema final, mas mantidas vazias, visto que o preenchimento exigiria o cruzamento com uma base externa, o que foge ao escopo da limpeza pura dos arquivos CSV fornecidos.
-
-## 2. Validação e Qualidade de Dados
-
-### 2.1 Estratégia de Validação (Quarantine Pattern)
-
-Para garantir a confiabilidade dos dados sem comprometer a integridade financeira, foi implementada uma estratégia de **Soft Validation** com segregação de dados (Quarentena).
-
-**Regras de Validação Implementadas:**
-1.  **CNPJ:** Verificação matemática dos dígitos verificadores (Algoritmo Módulo 11) e formato (14 dígitos).
-2.  **Integridade Cadastral:** O campo `RazaoSocial` não pode ser vazio ou nulo.
-3.  **Consistência Financeira:** O campo `ValorDespesas` deve ser estritamente positivo (conforme requisito de negócio).
-
-**Trade-off Técnico: Exclusão vs. Quarentena**
-Ao encontrar registros inválidos (ex: CNPJ incorreto), a decisão técnica foi **não excluir** o registro sumariamente.
-
-* **Abordagem Escolhida:** Segregação em `data_quarantine.csv` com flag de erro.
-* **Justificativa:** Em sistemas financeiros e contábeis, excluir uma linha apenas porque um dado cadastral está errado (como um dígito de CNPJ) gera "furos" no balanço financeiro final. O valor monetário é real e precisa ser contabilizado, mesmo que a atribuição cadastral precise de correção manual.
-* **Prós:**
-    * Preservação do volume financeiro total (Integridade Contábil).
-    * Rastreabilidade (Auditoria) para correção posterior pelo time de Backoffice.
-* **Contras:**
+#### **Decisão 10: Segregação (Quarentena) vs. Exclusão**
+Ao encontrar registros inválidos (ex: CNPJ incorreto ou Razão Social vazia), a decisão foi **não excluir**, mas separar em `data_quarantine.csv`.
+* **Justificativa:** Em sistemas financeiros, o valor monetário é real e precisa ser contabilizado, mesmo que o dado cadastral esteja errado. Excluir geraria "furos" no balanço.
+* **✅ Prós:**
+    * Preservação da integridade contábil (Soma total bate com a origem).
+    * Rastreabilidade para correção manual posterior (Backoffice).
+* **⚠️ Contras:**
     * Aumenta a complexidade do pipeline (gera 2 saídas em vez de 1).
     * Requer armazenamento para dados "sujos".
+
+---
+
+### 2.2. Enriquecimento de Dados (Cadastral)
+
+#### **Decisão 11: Estratégia de Join (In-Memory)**
+Para cruzar dados financeiros e cadastrais, optou-se pelo processamento em memória com Pandas, diferindo da extração incremental.
+* **Justificativa:** O dataset final consolidado (~18k linhas) é pequeno o suficiente para memória RAM.
+* **✅ Prós (KISS):** Simplicidade e rapidez de implementação. Frameworks distribuídos (Spark) seriam *over-engineering*.
+* **⚠️ Contras:** Se o dataset final crescesse para a casa dos Gigabytes, essa etapa precisaria ser refatorada para chunks.
+
+#### **Decisão 12: Chave de Ligação (`REG_ANS`)**
+Uso de `REG_ANS` como chave primária de join, ao invés do CNPJ solicitado.
+* **Justificativa (Realidade vs Requisito):** Os arquivos financeiros brutos **não continham CNPJ**, apenas `REG_ANS`.
+* **✅ Prós:** Viabilizou o enriquecimento. O CNPJ foi trazido da base cadastral para a financeira.
+* **⚠️ Contras:** Dependência da qualidade da base cadastral da ANS.
+
+---
+
+### 2.3. Resolução de Anomalias
+
+Durante a validação, foram tomadas decisões específicas para "Sanitizar" os dados:
+
+1.  **Bug da "SUL AMERICA" (Zeros à Esquerda)**
+    * **Problema:** O CSV da ANS trazia CNPJs como numéricos (`1685...` - 13 dígitos), causando falha na validação.
+    * **Ação:** Implementação de `zfill(14)` no `DataEnricher`.
+    * **Resultado:** Taxa de aprovação subiu de 3% para 99%.
+
+2.  **Registro sem Match (Ghost)**
+    * **Ação:** `Left Join`.
+    * **Justificativa:** Mantém a despesa financeira mesmo se a operadora não for encontrada no cadastro ativo. Prioridade é o dado financeiro.
+
+3.  **Duplicidade no Cadastro**
+    * **Ação:** Deduplicação prévia por `REGISTRO_OPERADORA`.
+    * **Justificativa:** Evita a explosão de linhas (Produto Cartesiano) no join 1:N.
