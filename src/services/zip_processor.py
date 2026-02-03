@@ -47,13 +47,13 @@ class ZipProcessor:
                             df[col] = df[col].apply(self._to_float)
                     print(f"Loaded {len(df)} rows. Transforming...")
 
-                    target_phrase = "Despesas com Eventos/Sinistros"
+                    target_pattern = r"Despesas com Eventos\s*/\s*Sinistros"
 
-                    mask = df['DESCRICAO'].str.contains(target_phrase, case=False, na=False)
+                    mask = df['DESCRICAO'].str.contains(target_pattern, case=False, na=False, regex=True)
 
                     df_filtered = df[mask].copy()
-
-                    print(f"Filtered: {len(df_filtered)} rows relate to '{target_phrase}'.")
+                    
+                    print(f"Filtered: {len(df_filtered)} rows match regex '{target_pattern}'.")
                     return df_filtered
 
         except Exception as e:

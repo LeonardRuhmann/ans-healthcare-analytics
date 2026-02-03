@@ -26,7 +26,7 @@ class AnsDataClient:
             return []
 
     def _detect_quarter(self, text: str) -> int:
-        """
+        r"""
         Uses Regex to find 1T, 2T, 3T, 4T in filenames.
         - (?<!\d): Ensures the number is NOT preceded by another digit (avoids 2011 -> Q1).
         - ([1-4]): Captures the quarter number.
