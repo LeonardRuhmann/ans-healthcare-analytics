@@ -9,9 +9,9 @@ O pipeline executa as seguintes etapas sequencialmente:
 1.  **Scraping e Identificação:** O sistema acessa o site da ANS e identifica os arquivos de demonstrações contábeis (ZIP) mais recentes (padrão Trimestral).
 2.  **Extração e Transformação (Stream):**
     * Baixa os arquivos ZIP utilizando *streaming* para economizar memória.
-    * Lê o conteúdo em memória e aplica filtros (Regex) para isolar despesas assistenciais.
+    * Lê o conteúdo em memória e aplica filtros para isolar despesas assistenciais.
     * Normaliza dados numéricos e datas.
-3.  **Consolidação:** Unifica os dados dos trimestres processados em um único arquivo temporário.
+3.  **Consolidação:** Unifica os dados dos trimestres processados em um único arquivo intermediário.
 4.  **Enriquecimento (Join):**
     * Baixa a base cadastral de operadoras ativas.
     * Realiza o cruzamento (Join) entre dados financeiros e cadastrais via `REG_ANS`.
@@ -62,8 +62,11 @@ Siga os passos abaixo para rodar o pipeline em seu ambiente local.
 
 5.  **Verifique os Resultados:**
     Os arquivos gerados estarão na pasta `output/`:
-    * `Teste_Leonardo_Ruhmann.zip` (Arquivo Final)
-    * `data_quarantine.csv` (Dados auditados/inválidos)
+    * `Teste_Leonardo_Ruhmann.zip` — Arquivo final com despesas agregadas
+    * `data_clean.csv` — Dados validados (entrada para agregação)
+    * `data_quarantine.csv` — Registros inválidos/inconsistentes (auditoria)
+    * `consolidado_despesas.zip` — Dados consolidados (intermediário)
+    * `enriched_data.zip` — Dados enriquecidos com cadastro (intermediário)
 
 ---
 
@@ -73,17 +76,17 @@ Abaixo detalho as decisões de design, trade-offs escolhidos e estratégias de r
 
 ##  Pipeline de Extração e Transformação (ETL)
 
-### Acesso à API e Arquitetura
+### Acesso ao Portal e Arquitetura
 
 #### **Decisão 1: Separação de Responsabilidades (`Services`)**
-Criei uma pasta `services` e a classe `AnsDataClient` para isolar a lógica de conexão.
+Criei uma pasta `services` e a classe `AnsDataClient` para isolar a lógica de acesso ao portal (scraping HTML + download).
 * **Justificativa:** Evita misturar a lógica de conexão com o fluxo principal.
 * **✅ Prós:** Código desacoplado, fácil manutenção e escalabilidade.
 * **⚠️ Contras:** Aumenta ligeiramente a complexidade da estrutura de pastas para um projeto pequeno.
 
 #### **Decisão 2: Ferramenta de Scraping (`BeautifulSoup4` vs `Selenium`)**
 Optei pela biblioteca `BeautifulSoup4` (BS4) em conjunto com `Requests` ao invés de Selenium ou Regex puro.
-* **Justificativa (KISS):** O site da ANS é estático. Usar Selenium seria *overkill* (pesado e lento). Regex puro seria frágil para tags HTML.
+* **Justificativa (KISS):** O portal da ANS disponibiliza listagens HTML estáticas. Usar Selenium seria *overkill* (pesado e lento). Regex puro seria frágil para tags HTML.
 * **✅ Prós:** Leve, rápido e robusto contra pequenas mudanças de layout HTML.
 * **⚠️ Contras:** Não funcionaria se o site dependesse de JavaScript para renderizar os links (o que não é o caso).
 
@@ -125,8 +128,8 @@ Leitura forçada em `UTF-8` e conversão de `1.000,00` para `1000.0`.
 ###  Consolidação e Limpeza
 
 #### **Decisão 8: Tratamento de Valores Zerados vs. Negativos**
-Remoção física de registros com valor `0.0`.
-* **Justificativa:** Registros zerados indicam inatividade e geram "ruído".
+Remoção física de registros com valor `0.0`. O arquivo consolidado é persistido em `output/consolidado_despesas.zip` e reutilizado nas etapas seguintes.
+ **Justificativa:** Registros zerados indicam inatividade e geram "ruído".
 * **✅ Prós:** Redução drástica do volume de dados sem perda de informação.
 * **⚠️ Contras:** Perde-se o histórico de que a conta existiu naquele trimestre (embora inativa).
 
