@@ -62,7 +62,7 @@ def main():
     enricher = DataEnricher()
     
     # Input: The output from consolidator
-    input_for_enricher = os.path.join(config.OUTPUT_DIR, "consolidado_despesas.zip")
+    input_for_enricher = os.path.join(config.OUTPUT_DIR, config.CONSOLIDATED_FILE)
     
     if os.path.exists(input_for_enricher):
         # This generates 'output/enriched_data.zip'

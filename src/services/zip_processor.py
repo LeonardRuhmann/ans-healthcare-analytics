@@ -4,13 +4,8 @@ import pandas as pd
 from typing import List, Optional
 
 class ZipProcessor:
-    def __init__(self, temp_dir="temp_extract"):
-        """
-        Initializes the processor.
-        temp_dir: Where we will extract files if necessary.
-        """
-        self.temp_dir = temp_dir
-        os.makedirs(self.temp_dir, exist_ok=True)
+    """Processes ZIP files containing CSV data using in-memory extraction."""
+    pass
 
     def inspect_zip(self, zip_path: str) -> List[str]:
         """
@@ -58,7 +53,7 @@ class ZipProcessor:
                         if col in df_filtered.columns:
                             df_filtered[col] = df_filtered[col].apply(self._to_float)
                     
-                    print(f"Filtered: {len(df_filtered)} rows match regex '{target_pattern}'.")
+                    print(f"Filtered: {len(df_filtered)} rows match '{target_pattern}'.")
                     return df_filtered
 
         except Exception as e:

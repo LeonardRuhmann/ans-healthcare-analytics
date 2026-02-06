@@ -14,3 +14,6 @@ CADASTRE_URL = "https://dadosabertos.ans.gov.br/FTP/PDA/operadoras_de_plano_de_s
 # --- Processamento ---
 CSV_SEP = ";"
 CSV_ENCODING = "utf-8"
+
+CONSOLIDATED_FILE = "consolidado_despesas.zip"
+
