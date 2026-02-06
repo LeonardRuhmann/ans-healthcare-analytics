@@ -5,7 +5,6 @@ from typing import List, Optional
 
 class ZipProcessor:
     """Processes ZIP files containing CSV data using in-memory extraction."""
-    pass
 
     def inspect_zip(self, zip_path: str) -> List[str]:
         """
