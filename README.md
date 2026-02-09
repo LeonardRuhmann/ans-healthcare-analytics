@@ -79,10 +79,14 @@ Abaixo detalho as decisões de design, trade-offs escolhidos e estratégias de r
 ### Acesso ao Portal e Arquitetura
 
 #### **Decisão 1: Separação de Responsabilidades (`Services`)**
-Criei uma pasta `services` e a classe `AnsDataClient` para isolar a lógica de acesso ao portal (scraping HTML + download).
-* **Justificativa:** Evita misturar a lógica de conexão com o fluxo principal.
-* **✅ Prós:** Código desacoplado, fácil manutenção e escalabilidade.
-* **⚠️ Contras:** Aumenta ligeiramente a complexidade da estrutura de pastas para um projeto pequeno.
+Criei uma pasta `services` para isolar a lógica de negócio:
+* `AnsDataClient`: Acesso ao portal e download.
+* `IngestionService`: Orquestração do processamento de arquivos.
+* `ZipProcessor`, `DataConsolidator`, etc.: Implementações específicas de cada etapa.
+
+* **Justificativa:** Evita misturar a lógica de orquestração com detalhes de implementação.
+* **✅ Prós:** Código desacoplado, fácil manutenção e testabilidade.
+* **⚠️ Contras:** Aumenta a quantidade de arquivos.
 
 #### **Decisão 2: Ferramenta de Scraping (`BeautifulSoup4` vs `Selenium`)**
 Optei pela biblioteca `BeautifulSoup4` (BS4) em conjunto com `Requests` ao invés de Selenium ou Regex puro.
@@ -101,6 +105,11 @@ Utilizei `stream=True` nas requisições HTTP.
 * **Justificativa:** Processa o download em partes (*chunks*).
 * **✅ Prós:** Previne estouro de memória (RAM) ao baixar arquivos ZIP grandes em servidores modestos.
 * **⚠️ Contras:** Nenhum significativo para este contexto.
+
+#### **Decisão 4b: Observabilidade (Logging)**
+Substituição de `print()` por `logging` estruturado.
+* **Justificativa:** Permite monitoramento adequado em produção e categorização de níveis de erro (`INFO`, `WARNING`, `ERROR`).
+* **✅ Prós:** Logs mais limpos e possibilidade de persistência em arquivo.
 
 ---
 

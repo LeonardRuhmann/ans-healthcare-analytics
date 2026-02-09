@@ -1,7 +1,10 @@
+import logging
 import pandas as pd
 import os
 import zipfile
 from src import config
+
+logger = logging.getLogger(__name__)
 
 class DataAggregator:
     def __init__(self, output_dir=config.OUTPUT_DIR):
@@ -12,25 +15,25 @@ class DataAggregator:
         Performs grouping and aggregation on the clean dataset.
         Metrics: Total, Std Dev, Avg per Quarter.
         """
-        print(f"   [Aggregator] Loading clean data from {clean_csv_path}...")
+        logger.info(f"   [Aggregator] Loading clean data from {clean_csv_path}...")
         
         # Load data (ensure correct types)
         try:
             df = pd.read_csv(clean_csv_path, sep=config.CSV_SEP, encoding=config.CSV_ENCODING)
         except Exception as e:
-            print(f"   [Error] Failed to read file {clean_csv_path}: {e}")
+            logger.error(f"   [Error] Failed to read file {clean_csv_path}: {e}")
             return None
 
         # remove columns with '_y'
         cols_to_drop = [col for col in df.columns if str(col).endswith('_y')]
         if cols_to_drop:
-            print(f"   [Fix] Dropping redundant columns: {cols_to_drop}")
+            logger.info(f"   [Fix] Dropping redundant columns: {cols_to_drop}")
             df.drop(columns=cols_to_drop, inplace=True)
 
         # rename columns with '_x'
         cols_to_rename = {col: str(col).replace('_x', '') for col in df.columns if str(col).endswith('_x')}
         if cols_to_rename:
-            print(f"   [Fix] Renaming columns back to original: {cols_to_rename}")
+            logger.info(f"   [Fix] Renaming columns back to original: {cols_to_rename}")
             df.rename(columns=cols_to_rename, inplace=True)
 
         # Convert numeric columns if they are strings
@@ -42,7 +45,7 @@ class DataAggregator:
         # Create a helper column 'Quarter' (e.g., "2025Q3")
         df['Quarter'] = df['DATA'].dt.to_period('Q').astype(str)
 
-        print("   Calculating metrics by Operator/State...")
+        logger.info("   Calculating metrics by Operator/State...")
 
 
         group_keys = ['REG_ANS', 'RazaoSocial', 'UF', 'Modalidade']
@@ -89,22 +92,23 @@ class DataAggregator:
 
         
         # Formatting float to 2 decimal places for readability
+        # Formatting float to 2 decimal places for readability
         summary.to_csv(output_csv_path, index=False, sep=config.CSV_SEP, float_format='%.2f', encoding=config.CSV_ENCODING)
-        print(f"    Saved CSV to {output_csv_path}")
+        logger.info(f"    Saved CSV to {output_csv_path}")
 
         zip_filename = 'Teste_Leonardo_Ruhmann.zip'
         output_zip_path = os.path.join(self.output_dir, zip_filename)
 
-        print(f"   Zipping to {output_zip_path}...")
+        logger.info(f"   Zipping to {output_zip_path}...")
         with zipfile.ZipFile(output_zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
             zf.write(output_csv_path, arcname=csv_filename)
         
-        print(f"   [Success] Final file created: {output_zip_path}")
+        logger.info(f"   [Success] Final file created: {output_zip_path}")
 
         # Show Top 1 result for validation
         if not summary.empty:
             top_one = summary.iloc[0]
-            print(f"   -> Top Spender: {top_one['Razao_Social']} ({top_one['UF']})")
-            print(f"   -> Total: R$ {top_one['Valor_total_Despesas']:,.2f}")
+            logger.info(f"   -> Top Spender: {top_one['Razao_Social']} ({top_one['UF']})")
+            logger.info(f"   -> Total: R$ {top_one['Valor_total_Despesas']:,.2f}")
 
         return output_zip_path

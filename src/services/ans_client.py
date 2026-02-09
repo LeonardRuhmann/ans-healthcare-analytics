@@ -5,7 +5,11 @@ import re
 import os
 from typing import List, Dict
 
+import logging
+
 from src import config
+
+logger = logging.getLogger(__name__)
 
 class AnsDataClient:
     def __init__(self, download_dir=config.DOWNLOAD_DIR):
@@ -22,7 +26,7 @@ class AnsDataClient:
             links = [a.get('href') for a in soup.find_all('a') if a.get('href') and 'Parent' not in a.text]
             return links
         except Exception as e:
-            print(f"Error accessing {url}: {e}")
+            logger.error(f"Error accessing {url}: {e}")
             return []
 
     def _detect_quarter(self, text: str) -> int:
@@ -54,7 +58,7 @@ class AnsDataClient:
         Scans years and files to build a list of all available data.
         Returns sorted list: Newest first.
         """
-        print(f"Scanning {config.ANS_BASE_URL}...")
+        logger.info(f"Scanning {config.ANS_BASE_URL}...")
         root_links = self._get_links(config.ANS_BASE_URL)
 
         found_files = []
@@ -96,10 +100,10 @@ class AnsDataClient:
         local_path = os.path.join(self.download_dir, filename)
 
         if os.path.exists(local_path):
-            print(f"File {filename} already exists. Skipping...")
-            return
+            logger.info(f"File {filename} already exists. Skipping...")
+            return local_path
         
-        print(f"Downloading {filename}...")
+        logger.info(f"Downloading {filename}...")
         try:
             # stream=True tells requests NOT to download everything at once
             with requests.get(url, stream=True) as r:
@@ -107,31 +111,40 @@ class AnsDataClient:
                 with open(local_path, 'wb') as f:
                     # shutil.copyfileobj writes chunks of data to disk as they arrive
                     shutil.copyfileobj(r.raw, f)
-            print(f"Success {local_path}")
+            logger.info(f"Success {local_path}")
+            return local_path
         except Exception as e:
-            print(f"Failed to download {url}: {e}")
+            logger.error(f"Failed to download {url}: {e}")
+            return None
     
-    def download_last_3_quarters(self):
+    def download_last_3_quarters(self) -> List[str]:
         """
         Main method to orchestrate the process.
+        Returns:
+            List[str]: List of absolute paths of the downloaded files.
         """
         #  Get the list
         candidates = self.get_available_quarters()
         
         if not candidates:
-            print("No files found.")
-            return
+            logger.warning("No files found.")
+            return []
 
         # Slice the top 3 (since it's already sorted)
         targets = candidates[:3]
+        downloaded_paths = []
 
-        print(f"Targeting top 3 files:")
+        logger.info(f"Targeting top 3 files:")
         for t in targets:
-            print(f" - {t['year']} Q{t['quarter']}: {t['filename']}")
+            logger.info(f" - {t['year']} Q{t['quarter']}: {t['filename']}")
 
         # Download them
         for item in targets:
-            self._download_file(item['url'], item['filename'])
+            path = self._download_file(item['url'], item['filename'])
+            if path:
+                downloaded_paths.append(path)
+        
+        return downloaded_paths
 
     def download_cadastral_data(self):
         """

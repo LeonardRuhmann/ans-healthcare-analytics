@@ -1,6 +1,12 @@
 import pandas as pd
 import os
 
+import logging
+import pandas as pd
+import os
+
+logger = logging.getLogger(__name__)
+
 class DataEnricher:
     def __init__(self, output_dir='output'):
         self.output_dir = output_dir
@@ -16,14 +22,14 @@ class DataEnricher:
             # Try UTF-8 first
             return pd.read_csv(path, sep=';', encoding='utf-8', usecols=cols, dtype=str)
         except (UnicodeDecodeError, ValueError):
-            print("   UTF-8 failed. Retrying with Latin-1...")
+            logger.warning("   UTF-8 failed. Retrying with Latin-1...")
             return pd.read_csv(path, sep=';', encoding='latin-1', usecols=cols, dtype=str)
 
     def enrich_data(self, financial_zip_path: str, cadastral_csv_path: str):
-        print(f"    Loading Financial Data: {financial_zip_path}...")
+        logger.info(f"    Loading Financial Data: {financial_zip_path}...")
         df_fin = pd.read_csv(financial_zip_path, compression='zip', sep=';', encoding='utf-8', dtype=str)
         
-        print(f"   Loading Cadastral Data: {cadastral_csv_path}...")
+        logger.info(f"   Loading Cadastral Data: {cadastral_csv_path}...")
         df_cad = self._load_cadastral_csv(cadastral_csv_path)
 
         # STANDARDIZE KEYS (Remove spaces, ensure string)
@@ -35,7 +41,7 @@ class DataEnricher:
         df_cad = df_cad.drop_duplicates(subset=['REGISTRO_OPERADORA'])
 
         # PERFORM JOIN (Left Join)
-        print(f"   Merging {len(df_fin)} rows...")
+        logger.info(f"   Merging {len(df_fin)} rows...")
         merged_df = pd.merge(
             df_fin, 
             df_cad, 

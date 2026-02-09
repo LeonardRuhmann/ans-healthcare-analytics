@@ -1,7 +1,10 @@
+import logging
 import pandas as pd
 import os
 from src.utils.validators import validate_cnpj
 from src import config
+
+logger = logging.getLogger(__name__)
 
 class DataValidator:
     def __init__(self, output_dir=config.OUTPUT_DIR):
@@ -12,16 +15,16 @@ class DataValidator:
         Reads the consolidated ZIP, validates business rules,
         and splits data into 'clean' and 'quarantine'.
         """
-        print(f"    Reading data from {input_zip_path}...")
+        logger.info(f"    Reading data from {input_zip_path}...")
         
         # Pandas can read directly from ZIP if it contains one CSV
         try:
             df = pd.read_csv(input_zip_path, compression='zip', sep=config.CSV_SEP, encoding=config.CSV_ENCODING, dtype=str)
         except Exception as e:
-            print(f"   [Error] Could not read ZIP file: {e}")
+            logger.error(f"   [Error] Could not read ZIP file: {e}")
             return None
 
-        print(f"    Validating {len(df)} rows...")
+        logger.info(f"    Validating {len(df)} rows...")
 
         # Replace comma with dot (standardize)
         df['ValorDespesas'] = df['ValorDespesas'].str.replace(',', '.', regex=False)
@@ -63,8 +66,8 @@ class DataValidator:
         clean_df.to_csv(clean_path, sep=config.CSV_SEP, index=False, encoding=config.CSV_ENCODING)
         quarantine_df.to_csv(quarantine_path, sep=config.CSV_SEP, index=False, encoding=config.CSV_ENCODING)
 
-        print(f"    Done.")
-        print(f"   -> Clean Rows: {len(clean_df)} (Saved to {clean_path})")
-        print(f"   -> Quarantine Rows: {len(quarantine_df)} (Saved to {quarantine_path})")
+        logger.info(f"    Done.")
+        logger.info(f"   -> Clean Rows: {len(clean_df)} (Saved to {clean_path})")
+        logger.info(f"   -> Quarantine Rows: {len(quarantine_df)} (Saved to {quarantine_path})")
         
         return clean_path, quarantine_path

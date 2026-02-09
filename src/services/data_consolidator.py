@@ -1,7 +1,10 @@
 import pandas as pd
 import os
 import zipfile
+import logging
 from src import config
+
+logger = logging.getLogger(__name__)
 
 class DataConsolidator:
     def __init__(self, output_dir=config.OUTPUT_DIR):
@@ -24,7 +27,7 @@ class DataConsolidator:
 
         initial_count = len(df)
 
-        print(f"--- STARTING CONSOLIDATION (Input: {initial_count} rows) ---")
+        logger.info(f"--- STARTING CONSOLIDATION (Input: {initial_count} rows) ---")
         
 
         # STANDARDIZE DATE 
@@ -43,8 +46,8 @@ class DataConsolidator:
         # APPLY FILTER: Keep only non-zeros
         df = df[~zeros_mask].copy()
         
-        print(f"    Dropped {zeros_count} rows with Zero Value.")
-        print(f"    Keeping {len(df[df['ValorDespesas'] < 0])} negative rows (reversals).")
+        logger.info(f"    Dropped {zeros_count} rows with Zero Value.")
+        logger.info(f"    Keeping {len(df[df['ValorDespesas'] < 0])} negative rows (reversals).")
 
         # Drop Duplicates
         target_cols = ['REG_ANS', 'DATA', 'CD_CONTA_CONTABIL', 'ValorDespesas', 'DESCRICAO']
@@ -52,15 +55,15 @@ class DataConsolidator:
         duplicate_count = duplicates_mask.sum()
 
         if duplicate_count > 0:
-            print(f"    Detected {duplicate_count} duplicate records.")
-            print("   --- Sample of Duplicates (First 5) ---")
-            print(df[duplicates_mask].head(5).to_string(index=False)) # Cleaner print
+            logger.info(f"    Detected {duplicate_count} duplicate records.")
+            logger.info("   --- Sample of Duplicates (First 5) ---")
+            logger.info("\n" + df[duplicates_mask].head(5).to_string(index=False)) # Cleaner print
             
             #  Remove duplicates, keeping the first occurrence
             df_clean = df.drop_duplicates(subset=target_cols)
-            print(f"    Deduplication complete. Dropped {initial_count - len(df_clean)} redundant rows.")
+            logger.info(f"    Deduplication complete. Dropped {initial_count - len(df_clean)} redundant rows.")
         else:
-            print("    No duplicates detected.")
+            logger.info("    No duplicates detected.")
             df_clean = df
 
         # Create placeholders for CNPJ/Name 
@@ -77,7 +80,7 @@ class DataConsolidator:
         csv_path = os.path.join(self.output_dir, csv_filename)
         zip_filename = os.path.join(self.output_dir, "consolidado_despesas.zip")
 
-        print(f"Saving final file to {zip_filename}...")
+        logger.info(f"Saving final file to {zip_filename}...")
         
         # Save CSV
         df.to_csv(csv_path, index=False, sep=config.CSV_SEP, encoding=config.CSV_ENCODING)
@@ -88,4 +91,4 @@ class DataConsolidator:
             
         # Cleanup
         os.remove(csv_path)
-        print("Success! Consolidation finished.")
+        logger.info("Success! Consolidation finished.")

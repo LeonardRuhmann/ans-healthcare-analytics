@@ -1,7 +1,10 @@
+import logging
 import zipfile
 import os
 import pandas as pd
 from typing import List, Optional
+
+logger = logging.getLogger(__name__)
 
 class ZipProcessor:
     """Processes ZIP files containing CSV data using in-memory extraction."""
@@ -14,13 +17,13 @@ class ZipProcessor:
         try:
             with zipfile.ZipFile(zip_path, 'r') as z:
                 file_list = z.namelist()
-                print(f"Inspecting {os.path.basename(zip_path)}: Found {len(file_list)} files.")
+                logger.info(f"Inspecting {os.path.basename(zip_path)}: Found {len(file_list)} files.")
                 return file_list
         except zipfile.BadZipFile:
-            print(f"Error: {zip_path} is corrupted or not a valid ZIP.")
+            logger.error(f"Error: {zip_path} is corrupted or not a valid ZIP.")
             return []
         except Exception as e:
-            print(f"Error reading {zip_path}: {e}")
+            logger.error(f"Error reading {zip_path}: {e}")
             return []
 
     def read_csv_from_zip(self, zip_path: str, target_filename: str) -> Optional[pd.DataFrame]:
@@ -31,7 +34,7 @@ class ZipProcessor:
             with zipfile.ZipFile(zip_path, 'r') as z:
                 # open the file directly from memory (no need to extract to disk first)
                 with z.open(target_filename) as f:
-                    print(f"Reading {target_filename}...")
+                    logger.info(f"Reading {target_filename}...")
                     
                     df = pd.read_csv(f, encoding='utf-8', sep=';', dtype=str)
 
@@ -52,11 +55,11 @@ class ZipProcessor:
                         if col in df_filtered.columns:
                             df_filtered[col] = df_filtered[col].apply(self._to_float)
                     
-                    print(f"Filtered: {len(df_filtered)} rows match '{target_pattern}'.")
+                    logger.info(f"Filtered: {len(df_filtered)} rows match '{target_pattern}'.")
                     return df_filtered
 
         except Exception as e:
-            print(f"Error reading {target_filename}: {e}")
+            logger.error(f"Error reading {target_filename}: {e}")
             return None
 
     def _to_float(self, val):
@@ -86,7 +89,7 @@ class ZipProcessor:
         target_file = next((f for f in files if f.lower().endswith(('.csv', '.xlsx'))), None)
         
         if not target_file:
-            print(f"No suitable CSV/XLSX found in {zip_path}")
+            logger.warning(f"No suitable CSV/XLSX found in {zip_path}")
             return None
         
         return self.read_csv_from_zip(zip_path, target_file)
