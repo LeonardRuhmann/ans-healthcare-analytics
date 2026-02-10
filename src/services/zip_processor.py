@@ -3,6 +3,7 @@ import zipfile
 import os
 import pandas as pd
 from typing import List, Optional
+from src import config
 
 logger = logging.getLogger(__name__)
 
@@ -36,14 +37,14 @@ class ZipProcessor:
                 with z.open(target_filename) as f:
                     logger.info(f"Reading {target_filename}...")
                     
-                    df = pd.read_csv(f, encoding='utf-8', sep=';', dtype=str)
+                    df = pd.read_csv(f, encoding=config.CSV_ENCODING, sep=config.CSV_SEP, dtype=str)
 
 
 
                     if 'DESCRICAO' in df.columns:
                         df['DESCRICAO'] = df['DESCRICAO'].str.strip()
 
-                        target_pattern = "Despesas com Eventos / Sinistros"
+                        target_pattern = config.TARGET_EXPENSE_DESCRIPTION
 
                         mask = df['DESCRICAO'].str.contains(target_pattern, case=False, na=False, regex=False)
 
