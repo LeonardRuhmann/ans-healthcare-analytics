@@ -47,20 +47,20 @@ class DataAggregator:
 
         logger.info("   Calculating metrics by Operator/State...")
 
+        latest_date = df['DATA'].max()
+
+        df_snapshot = df[df['DATA'] == latest_date].copy()
 
         group_keys = ['REG_ANS', 'RazaoSocial', 'UF', 'Modalidade']
 
         # --- PRIMARY AGGREGATION (Sum & StdDev) ---
         # Group by Company (RazaoSocial) and State (UF)
-        grouped = df.groupby(group_keys)
+        grouped = df_snapshot.groupby(group_keys)
         
-        # Calculate Sum, StdDev, and Count
-        summary = grouped['ValorDespesas'].agg(['sum', 'std', 'count']).reset_index()
-        summary.rename(columns={
-            'sum': 'Valor_total_Despesas', 
-            'std': 'Desvio_padrao_Despesas',
-            'count': 'Qtd_Transacoes'
-        }, inplace=True)
+        summary = df_snapshot.groupby(group_keys)['ValorDespesas'].agg(
+            Valor_total_Despesas='sum', Desvio_padrao_Despesas='std'
+            ).reset_index()
+        
         
         # Handle NaN in StdDev (occurs if an operator has only 1 transaction)
         summary['Desvio_padrao_Despesas'] = summary['Desvio_padrao_Despesas'].fillna(0)
@@ -68,7 +68,9 @@ class DataAggregator:
         # --- QUARTERLY AVERAGE ---
         # Logic: Total Expenses / Number of Active Quarters
         # We count how many distinct quarters each operator appears in
-        unique_quarters = grouped['Quarter'].nunique().reset_index(name='Qtd_Trimestres_Ativos')
+        grouped_original = df.groupby(group_keys)
+
+        unique_quarters = grouped_original['Quarter'].nunique().reset_index(name='Qtd_Trimestres_Ativos')
         
         # Merge this count back to summary
         summary = pd.merge(summary, unique_quarters, on=group_keys)
