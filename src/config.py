@@ -17,3 +17,4 @@ CSV_ENCODING = "utf-8"
 
 CONSOLIDATED_FILE = "consolidado_despesas.zip"
 
+TARGET_EXPENSE_DESCRIPTION = "Despesas com Eventos / Sinistros"
