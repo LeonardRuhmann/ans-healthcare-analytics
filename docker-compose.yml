@@ -1,0 +1,29 @@
+# Docker Compose - MySQL 8.0 for SQL Validation
+# Usage:
+#   docker-compose up -d     → Start MySQL container
+#   docker-compose down -v   → Stop and remove container + data
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-ans
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ans_test
+    ports:
+      - "3306:3306"
+    volumes:
+      # 1. DDL: Creates tables on startup (runs automatically)
+      - ./sql/ddl_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+
+      # 2. Import: Loads CSV data on startup (runs automatically)
+      - ./sql/docker_import.sql:/docker-entrypoint-initdb.d/02_import.sql
+
+      # 3. Data files: Mounted so MySQL can read them
+      - ./downloads/Relatorio_Cadop.csv:/var/lib/mysql-files/Relatorio_Cadop.csv
+      - ./output/consolidado_despesas.csv:/var/lib/mysql-files/consolidado_despesas.csv
+
+      # 4. Validation and Analytics: Available for manual execution
+      - ./sql/validate.sql:/sql/validate.sql
+      - ./sql/queries_analytics.sql:/sql/queries_analytics.sql
+    command: --local-infile=1 --secure-file-priv=/var/lib/mysql-files
