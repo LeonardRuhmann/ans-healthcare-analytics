@@ -267,8 +267,8 @@ Optou-se pela **Opção B: Tabelas normalizadas** seguindo o modelo *Star Schema
 * **⚠️ Contras:** Ligeiramente mais lento que `FLOAT` em operações massivas, mas irrelevante para o nosso volume.
 
 **Datas → `DATE`**
-* **Justificativa:** Permite indexação temporal nativa e operações como `WHERE data_trimestre >= '2023-01-01'`. `VARCHAR` exigiria conversão em cada query e impediria comparações corretas. `TIMESTAMP` adicionaria hora/minuto/segundo sem utilidade para dados trimestrais.
-* **✅ Prós:** Indexação eficiente, comparações nativas, e funções de data (`YEAR()`, `QUARTER()`) disponíveis.
+* **Justificativa:** Permite operações temporais nativas como `MIN()`, `MAX()` e comparações por igualdade (`WHERE data_trimestre = ...`), essenciais para a lógica de *Snapshot Final* e pivot trimestral. `VARCHAR` exigiria conversão em cada query e impediria ordenação/comparação correta. `TIMESTAMP` adicionaria hora/minuto/segundo sem utilidade para dados trimestrais.
+* **✅ Prós:** Indexação eficiente, comparações nativas e conversão via `STR_TO_DATE()` na importação.
 * **⚠️ Contras:** Nenhum significativo para este contexto.
 
 #### **Decisão 15: Estratégia de Indexação**
@@ -277,9 +277,9 @@ Foram criados índices específicos para otimizar as queries analíticas mais fr
 
 | Índice | Coluna | Justificativa |
 | :--- | :--- | :--- |
-| `idx_operadoras_cnpj` | `dim_operadoras.cnpj` | Buscas por CNPJ (validação, lookup) |
-| `idx_despesas_data` | `fact_despesas_eventos.data_trimestre` | Filtros por período (`WHERE data >= ...`) |
-| `idx_despesas_reg` | `fact_despesas_eventos.reg_ans` | `JOIN` com a dimensão e agrupamentos |
+| `idx_operadoras_cnpj` | `dim_operadoras.cnpj` | Preparado para extensibilidade (lookups futuros por CNPJ). Não utilizado nas queries atuais. |
+| `idx_despesas_data` | `fact_despesas_eventos.data_trimestre` | Acelera `MIN()`, `MAX()` e comparações por igualdade (`WHERE data_trimestre = ...`) |
+| `idx_despesas_reg` | `fact_despesas_eventos.reg_ans` | `JOIN` com a dimensão e agrupamentos (`GROUP BY`) |
 
 * **Justificativa:** Sem índices, toda query analítica faria *Full Table Scan*. Com o crescimento da tabela fato, isso se tornaria inviável.
 * **⚠️ Trade-off:** Índices aceleram leituras (`SELECT`) mas desaceleram escritas (`INSERT`). Como a importação ocorre em *batch* (uma vez por trimestre), o custo de escrita é aceitável.
