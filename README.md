@@ -39,43 +39,41 @@ Siga os passos abaixo para rodar o pipeline ou as análises.
     cd IntuitiveCare-Teste
     ```
 
-2.  **Etapa 1: Gerar Dados (Pipeline ETL Python)**
-     *Responsável por baixar, limpar e consolidar os dados na pasta `output/`.*
+2.  **Execute o pipeline completo (recomendado):**
+    ```bash
+    ./run.sh
+    ```
+    Este script automatiza todo o fluxo: cria o ambiente virtual, instala dependências, executa o ETL Python, sobe o Docker com MySQL 8.0, importa os dados, roda validações e executa as queries analíticas.
+
+    > **Nota:** O MySQL 8.0 roda dentro do container Docker — não é necessário instalá-lo na máquina.
+
+    O script também aceita subcomandos para execução parcial:
+    | Comando | Descrição |
+    | :--- | :--- |
+    | `./run.sh` | Pipeline completo (ETL + Docker + Analytics) |
+    | `./run.sh etl` | Apenas o pipeline Python (gera os dados em `output/`) |
+    | `./run.sh docker` | Apenas Docker + Analytics (requer dados já gerados) |
+    | `./run.sh down` | Para e remove o container Docker |
+
+3.  **Execução manual (alternativa):**
+
+    Caso prefira executar cada etapa individualmente:
     
-    a. Crie o ambiente virtual:
+    a. **ETL Python:**
     ```bash
     python3 -m venv venv
     source venv/bin/activate  # Linux/Mac
     # .\venv\Scripts\activate # Windows
-    ```
-    
-    b. Instale dependências e execute:
-    ```bash
     pip install -r requirements.txt
     python -m src.main
     ```
 
-3.  **Etapa 2: Validar e Analisar (Docker & SQL) 🐳**
-    *Sobe o banco de dados **MySQL 8.0** e executa as queries analíticas.*
-    *(Pré-requisito: A pasta `output/` deve conter `consolidado_despesas.csv` e a pasta `downloads/` deve conter `Relatorio_Cadop.csv`)*
-
-    a. **Subir o ambiente:**
+    b. **Docker & SQL:**
     ```bash
     docker-compose up -d
-    ```
-
-    b. **Rodar Validação (Quality Gate):**
-    ```bash
+    # Aguarde ~30s para o MySQL inicializar e importar os dados
     docker exec -i mysql-ans mysql -uroot -proot ans_test < sql/validate.sql
-    ```
-
-    c. **Executar Queries (Crescimento, Totais por UF, etc):**
-    ```bash
     docker exec -i mysql-ans mysql -uroot -proot ans_test < sql/queries_analytics.sql
-    ```
-
-    d. **Parar o ambiente:**
-    ```bash
     docker-compose down -v
     ```
 
