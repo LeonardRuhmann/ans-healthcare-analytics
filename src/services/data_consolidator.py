@@ -69,7 +69,7 @@ class DataConsolidator:
         # Create placeholders for CNPJ/Name 
         df_clean = df_clean.assign(CNPJ=None, RazaoSocial=None)
         
-        final_cols = ['DATA','REG_ANS', 'CNPJ', 'RazaoSocial', 'Trimestre', 'Ano', 'ValorDespesas']
+        final_cols = ['DATA','REG_ANS', 'CD_CONTA_CONTABIL', 'CNPJ', 'RazaoSocial', 'Trimestre', 'Ano', 'ValorDespesas']
         final_df = df_clean[final_cols].copy()
 
         # EXPORT
