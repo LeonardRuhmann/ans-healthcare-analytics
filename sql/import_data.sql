@@ -63,12 +63,11 @@ IGNORE 1 LINES
 (data_str, reg_ans, conta_contabil, cnpj_dummy, razao_dummy, trim_dummy, ano_dummy, vl_saldo_final_str);
 
 -- Transform and Load
-INSERT INTO fact_despesas_eventos (data_trimestre, reg_ans, conta_contabil, descricao, vl_saldo_final)
+INSERT INTO fact_despesas_eventos (data_trimestre, reg_ans, conta_contabil, vl_saldo_final)
 SELECT 
     STR_TO_DATE(data_str, '%Y-%m-%d'), -- Convert YYYY-MM-DD
     reg_ans,
     conta_contabil,
-    NULL,
     CAST(REPLACE(vl_saldo_final_str, ',', '.') AS DECIMAL(18,2)) -- Convert "1234,56" to 1234.56
 FROM temp_despesas
 WHERE reg_ans IN (SELECT reg_ans FROM dim_operadoras); -- Ensure Referential Integrity

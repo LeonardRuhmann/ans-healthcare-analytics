@@ -37,7 +37,7 @@ class ExpenseResponse(BaseModel):
     id: int
     data_trimestre: date
     conta_contabil: str | None
-    descricao: str | None
+    conta_contabil: str | None
     vl_saldo_final: Decimal | None
 
     model_config = {"from_attributes": True}

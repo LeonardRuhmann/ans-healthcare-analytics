@@ -413,3 +413,66 @@ Para garantir a integridade dos números tanto na agregação Python quanto na a
     Criamos o script `sql/validate.sql` que verificou a hierarquia de contas, confirmando que os dados consolidados são puramente **Level 9 (Analíticos/Leaf)**, eliminando a hipótese de dupla contagem por hierarquia.
 
 > **Status:** ✅ Resolvido em Python (`fix/aggregation-ytd-logic`) e SQL (`feat/ytd-analytics`).
+
+---
+
+## 🎨 Trade-offs Técnicos - Frontend
+
+### 4.3.1. Estratégia de Busca/Filtro
+
+* **Opção A: Busca no servidor (Server-side)**
+* **Opção B: Busca no cliente (Client-side)**
+* **Opção C: Híbrido**
+
+**🏆 Escolha: Opção A (Server-side)**
+
+**Justificativa:** Optei pela busca no servidor para garantir escalabilidade e consistência com a paginação. Embora carregar 1.000 registros no cliente seja viável, essa abordagem quebraria se o volume crescesse para 100.000. Além disso, a busca server-side permite filtrar sobre todo o dataset, não apenas sobre a página atual. Para mitigar o impacto na experiência do usuário (latência), implementei um **debounce** no input de busca, disparando a requisição apenas após o usuário parar de digitar.
+
+### 4.3.2. Gerenciamento de Estado
+
+* **Opção A: Props/Events simples**
+* **Opção B: Vuex/Pinia**
+* **Opção C: Composables (Vue 3)**
+
+**🏆 Escolha: Opção C (Composables)**
+
+**Justificativa:** A complexidade da aplicação é média-baixa, com estado compartilhado pontual (ex: lista de operadoras). Pinia ou Vuex adicionariam *boilerplate* e dependências desnecessárias. Composables (`useOperadoras`, `useDetalhes`) aproveitam a reatividade nativa do Vue 3 (Composition API) para encapsular lógica e estado de forma modular, testável e reutilizável, mantendo a arquitetura limpa e sem *over-engineering*.
+
+### 4.3.3. Performance da Tabela
+
+**Estratégia Escolhida: Paginação Server-side**
+
+**Justificativa:** Renderizar milhares de linhas no DOM (mesmo que virtualizadas) consome memória e processamento do navegador. Com a paginação server-side (`LIMIT 10`), o DOM mantém-se leve, garantindo renderização instantânea e rolagem suave (60fps) mesmo em dispositivos móveis. A navegação entre páginas é rápida devido ao payload pequeno do JSON.
+
+### 4.3.4. Tratamento de Erros e Loading
+
+* **Estados de Loading:** Utilizei feedback visual via `spinners` (ou skeletons) durante as requisições assíncronas para indicar atividade e prevenir interações prematuras.
+* **Dados Vazios:** Implementei mensagens específicas ("Nenhum resultado encontrado") ao invés de deixar a tabela em branco, orientando o usuário.
+* **Erros de Rede/API:**
+    * **Análise Crítica:** Optei por mensagens específicas sempre que possível (ex: "Operadora não encontrada" para 404), mas com um *fallback* genérico ("Erro ao carregar dados") para falhas 500. Isso evita expor detalhes técnicos sensíveis (stack traces) ao usuário final, mantendo a segurança, enquanto oferece feedback acionável para erros comuns.
+
+---
+
+## 4.4. Documentação da API
+
+Uma coleção completa do Postman (`postman_collection.json`) foi incluída na raiz do projeto, contendo exemplos de requisições para:
+* Listagem de operadoras (com paginação e busca)
+* Detalhes de uma operadora
+* Histórico de despesas
+* Estatísticas globais
+
+Além disso, a API possui documentação automática (Swagger UI) acessível em `/docs`.
+
+---
+
+## 🛠️ Testes e Verificação
+
+### Postman Collection
+Uma coleção completa de testes de API está disponível em `postman_collection.json`. Importe no Postman para testar todas as rotas:
+1. `GET /api/operadoras` (Lista paginada)
+2. `GET /api/operadoras/{cnpj}` (Detalhes)
+3. `GET /api/operadoras/{cnpj}/despesas` (Histórico)
+4. `GET /api/estatisticas` (KPIs e Gráficos)
+
+### Swagger UI
+Documentação interativa automática disponível em: `http://localhost:8000/docs`

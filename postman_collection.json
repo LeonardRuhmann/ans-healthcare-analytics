@@ -1,0 +1,224 @@
+{
+    "info": {
+        "_postman_id": "intuitivecare-api-collection",
+        "name": "IntuitiveCare Analytics API",
+        "description": "Collection for testing IntuitiveCare Operators API.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "List Operators (Paginated)",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8000/api/operadoras?page=1&limit=1&search=",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "api",
+                        "operadoras"
+                    ],
+                    "query": [
+                        {
+                            "key": "page",
+                            "value": "1"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "1"
+                        },
+                        {
+                            "key": "search",
+                            "value": ""
+                        }
+                    ]
+                }
+            },
+            "response": [
+                {
+                    "name": "Example Response",
+                    "originalRequest": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/api/operadoras?page=1&limit=1",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "operadoras"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [],
+                    "cookie": [],
+                    "body": "{\"data\":[{\"reg_ans\":\"000515\",\"cnpj\":\"04439627000102\",\"razao_social\":\"ALLIANZ SAÚDE S/A\",\"uf\":\"SP\",\"modalidade\":\"Seguradora Especializada em Saúde\"}],\"pagination\":{\"total\":1109,\"page\":1,\"limit\":1,\"total_pages\":1109}}"
+                }
+            ]
+        },
+        {
+            "name": "Get Operator Details",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8000/api/operadoras/04439627000102",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "api",
+                        "operadoras",
+                        "04439627000102"
+                    ]
+                }
+            },
+            "response": [
+                {
+                    "name": "Example Response",
+                    "originalRequest": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/api/operadoras/04439627000102",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "operadoras",
+                                "04439627000102"
+                            ]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [],
+                    "cookie": [],
+                    "body": "{\"reg_ans\":\"000515\",\"cnpj\":\"04439627000102\",\"razao_social\":\"ALLIANZ SAÚDE S/A\",\"uf\":\"SP\",\"modalidade\":\"Seguradora Especializada em Saúde\"}"
+                }
+            ]
+        },
+        {
+            "name": "Get Operator Expenses",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8000/api/operadoras/04439627000102/despesas",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "api",
+                        "operadoras",
+                        "04439627000102",
+                        "despesas"
+                    ]
+                }
+            },
+            "response": [
+                {
+                    "name": "Example Response",
+                    "originalRequest": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/api/operadoras/04439627000102/despesas",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "operadoras",
+                                "04439627000102",
+                                "despesas"
+                            ]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [],
+                    "cookie": [],
+                    "body": "[{\"id\":12495,\"data_trimestre\":\"2025-07-01\",\"conta_contabil\":\"411111061\",\"vl_saldo_final\":\"16354028.63\"},{\"id\":12496,\"data_trimestre\":\"2025-07-01\",\"conta_contabil\":\"411112051\",\"vl_saldo_final\":\"46608.33\"}]"
+                }
+            ]
+        },
+        {
+            "name": "Get Global Statistics",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8000/api/estatisticas",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "api",
+                        "estatisticas"
+                    ]
+                }
+            },
+            "response": [
+                {
+                    "name": "Example Response",
+                    "originalRequest": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/api/estatisticas",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "estatisticas"
+                            ]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [],
+                    "cookie": [],
+                    "body": "{\"total_expenses\":\"296629679168.89\",\"average_expenses\":\"424970887.06\",\"top_5_operators\":[{\"reg_ans\":\"005711\",\"razao_social\":\"BRADESCO SAÚDE S.A.\",\"total_expenses\":\"36565730503.11\"}],\"expenses_by_uf\":[{\"uf\":\"SP\",\"total_expenses\":\"99325930436.09\"}]}"
+                }
+            ]
+        }
+    ]
+}

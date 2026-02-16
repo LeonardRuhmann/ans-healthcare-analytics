@@ -33,7 +33,6 @@ class Despesa(Base):
         String(20), ForeignKey("dim_operadoras.reg_ans"), nullable=False
     )
     conta_contabil: Mapped[str | None] = mapped_column(String(50))
-    descricao: Mapped[str | None] = mapped_column(String(255))
     vl_saldo_final: Mapped[float | None] = mapped_column(Numeric(18, 2))
 
     operadora: Mapped["Operadora"] = relationship(back_populates="despesas")
