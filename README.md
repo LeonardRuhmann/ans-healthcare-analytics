@@ -50,10 +50,12 @@ Siga os passos abaixo para rodar o pipeline ou as análises.
     O script também aceita subcomandos para execução parcial:
     | Comando | Descrição |
     | :--- | :--- |
-    | `./run.sh` | Pipeline completo (ETL + Docker + Analytics) |
+    | `./run.sh` | Pipeline completo (ETL + Docker + Analytics + Backend + Frontend) |
     | `./run.sh etl` | Apenas o pipeline Python (gera os dados em `output/`) |
     | `./run.sh docker` | Apenas Docker + Analytics (requer dados já gerados) |
     | `./run.sh down` | Para e remove o container Docker |
+    | `./run.sh server` | Inicia a API Backend (FastAPI) em `localhost:8000` |
+    | `./run.sh frontend` | Inicia o Frontend (Vue.js) em `localhost:5173` |
 
 3.  **Execução manual (alternativa):**
 
@@ -76,6 +78,21 @@ Siga os passos abaixo para rodar o pipeline ou as análises.
     docker exec -i mysql-ans mysql -uroot -proot ans_test < sql/queries_analytics.sql
     docker-compose down -v
     ```
+
+    c. **Backend (API):**
+    ```bash
+    source venv/bin/activate
+    uvicorn api.server:app --host 0.0.0.0 --port 8000 --reload
+    ```
+    Acesse a documentação da API em: `http://localhost:8000/docs`
+
+    d. **Frontend (Vue.js):**
+    ```bash
+    cd frontend
+    npm install
+    npm run dev
+    ```
+    Acesse a aplicação em: `http://localhost:5173`
 
 4.  **Verifique os Resultados (Pós-Etapa 1):**
     Os arquivos gerados estarão na pasta `output/`:
