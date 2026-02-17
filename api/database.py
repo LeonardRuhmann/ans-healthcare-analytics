@@ -12,14 +12,15 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 import os
 
-# Database Config (Environment Variables or Local Validation Defaults)
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "root")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "3306")
-DB_NAME = os.getenv("DB_NAME", "ans_test")
+# 1. Tenta pegar a URL do Render. Se não existir (rodando localmente), usa o seu Docker de fallback.
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", 
+    "mysql+pymysql://root:root@localhost:3306/ans_test"
+)
 
-DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# 2. A "Trava de Segurança": Se a string vier do Aiven sem o pymysql, o código corrige sozinho!
+if DATABASE_URL.startswith("mysql://"):
+    DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
 
 engine = create_engine(DATABASE_URL, echo=False)
 

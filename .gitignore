@@ -211,3 +211,6 @@ __marimo__/
 node_modules/
 .DS_Store
 
+
+# Local Backup
+backup_local.sql
