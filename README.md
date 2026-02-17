@@ -1,6 +1,6 @@
-# IntuitiveCare - Documentação Técnica
+# ANS Healthcare Analytics - Documentação Técnica
 
-Este repositório contém a solução para o teste técnico de Engenharia de Dados. O projeto consiste em um pipeline ETL (Extract, Transform, Load) para coletar, limpar, enriquecer e agregar dados financeiros e cadastrais de operadoras de planos de saúde a partir do portal de dados abertos da ANS.
+O ANS Healthcare Analytics é um projeto End-to-End de Engenharia de Dados focado na saúde suplementar brasileira. A arquitetura contempla todo o ciclo de vida do dado: desde a mineração de dados brutos na fonte até a disponibilização em um Dashboard interativo. O núcleo do projeto é um pipeline ETL (Extract, Transform, Load) robusto, projetado para coletar, limpar, enriquecer e agregar dados financeiros e cadastrais de operadoras de planos de saúde diretamente do portal de dados abertos da Agência Nacional de Saúde Suplementar (ANS).
 
 ## 🔄 Fluxo do Projeto (Pipeline)
 
