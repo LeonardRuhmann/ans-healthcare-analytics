@@ -186,6 +186,19 @@ case "${1:-all}" in
     server)   run_server ;;
     frontend) run_frontend ;;
     down)     run_down ;;
-    all)    run_etl; run_docker ;;
+    all)
+        run_etl
+        run_docker
+        
+        header "Phase 3: Starting Backend & Frontend"
+        log "Both servers will start in parallel. Press Ctrl+C to stop."
+
+        trap 'kill $(jobs -p); exit' SIGINT SIGTERM
+        
+        (run_server) &
+        (run_frontend) &
+        
+        wait
+        ;;
     *)      echo "Usage: ./run.sh [etl|docker|server|frontend|down|all]"; exit 1 ;;
 esac

@@ -62,17 +62,15 @@ LOAD DATA INFILE '/var/lib/mysql-files/consolidado_despesas.csv'
 INTO TABLE temp_despesas
 CHARACTER SET 'utf8'
 FIELDS TERMINATED BY ';'
-ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 LINES
 (data_str, reg_ans, cd_conta_contabil, cnpj_empty, razao_empty, trimestre_str, ano_str, vl_saldo_final_str);
 
-INSERT INTO fact_despesas_eventos (data_trimestre, reg_ans, conta_contabil, descricao, vl_saldo_final)
+INSERT INTO fact_despesas_eventos (data_trimestre, reg_ans, conta_contabil, vl_saldo_final)
 SELECT
     STR_TO_DATE(data_str, '%Y-%m-%d'),
     reg_ans,
     cd_conta_contabil,
-    NULL,
     CAST(REPLACE(vl_saldo_final_str, ',', '.') AS DECIMAL(18,2))
 FROM temp_despesas
 WHERE reg_ans IN (SELECT reg_ans FROM dim_operadoras);
