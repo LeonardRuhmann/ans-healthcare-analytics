@@ -1,8 +1,8 @@
 {
     "info": {
-        "_postman_id": "intuitivecare-api-collection",
-        "name": "IntuitiveCare Analytics API",
-        "description": "Collection for testing IntuitiveCare Operators API.",
+        "_postman_id": "ans-healthcare-analytics-api-collection",
+        "name": "ANS Healthcare Analytics API",
+        "description": "Collection for testing ANS Healthcare Analytics Operators API.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [

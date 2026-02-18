@@ -46,7 +46,7 @@ class TestDataAggregator(unittest.TestCase):
         
         expected_output = os.path.join(self.output_dir, 'despesas_agregadas.csv')
         
-        expected_zip = os.path.join(self.output_dir, 'Teste_Leonardo_Ruhmann.zip')
+        expected_zip = os.path.join(self.output_dir, 'ans_financial_export.zip')
         self.assertEqual(result_file, expected_zip)
         
         mock_to_csv.assert_called_once()

@@ -2,7 +2,7 @@
 set -e
 
 # ============================================================
-# IntuitiveCare ETL + SQL Analytics — Full Pipeline
+# ANS Healthcare Analytics ETL + SQL Analytics — Full Pipeline
 # ============================================================
 # Usage:
 #   ./run.sh          → Runs everything (ETL + Docker + Analytics + Backend + Frontend)

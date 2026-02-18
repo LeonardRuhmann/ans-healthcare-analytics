@@ -98,7 +98,7 @@ class DataAggregator:
         summary.to_csv(output_csv_path, index=False, sep=config.CSV_SEP, float_format='%.2f', encoding=config.CSV_ENCODING)
         logger.info(f"    Saved CSV to {output_csv_path}")
 
-        zip_filename = 'Teste_Leonardo_Ruhmann.zip'
+        zip_filename = 'ans_financial_export.zip'
         output_zip_path = os.path.join(self.output_dir, zip_filename)
 
         logger.info(f"   Zipping to {output_zip_path}...")

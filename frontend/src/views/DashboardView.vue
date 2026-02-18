@@ -54,9 +54,9 @@ const topOperatorValue = computed(() => {
         </div>
         <div class="ml-3">
           <p class="text-sm text-blue-700">
-            Carregando dados... 
+            Loading data... 
             <span class="font-medium">
-               (Como usamos um servidor gratuito, ele pode estar acordando. Isso leva cerca de 50 segundinhos!) ☕
+               (Since we use a free server, it might be waking up. This takes about 50 seconds!) ☕
             </span>
           </p>
         </div>
